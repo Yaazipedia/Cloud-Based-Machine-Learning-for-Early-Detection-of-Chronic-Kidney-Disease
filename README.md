@@ -44,24 +44,26 @@ conda activate pysnowpark-ml-streamlit
 
 
 3. **Configure Snowflake credentials**
-{
-  "account": "<your_account>",
-  "user": "<your_username>",
-  "password": "<your_password>",
-  "role": "<your_role>",
-  "warehouse": "<your_warehouse>",
-  "database": "<your_database>",
-  "schema": "<your_schema>"
-}
 
-4. **Preprocess the data**
+   ```bash
+     {
+    "account": "<your_account>",
+    "user": "<your_username>",
+    "password": "<your_password>",
+    "role": "<your_role>",
+    "warehouse": "<your_warehouse>",
+    "database": "<your_database>",
+    "schema": "<your_schema>"
+      }
+
+5. **Preprocess the data**
 python Final_ADT_code.ipynb \
   --input data/kidney_disease.csv
 
-5. **Load data into Snowflake and Train and Register Models**
+6. **Load data into Snowflake and Train and Register Models**
 colab Final_ADT_code.ipynb
 
-6. **Launch the Streamlit app**
+7. **Launch the Streamlit app**
 streamlit run streamlit_app/app_kidney.py
 
 ## 📊 Streamlit UI Overview
