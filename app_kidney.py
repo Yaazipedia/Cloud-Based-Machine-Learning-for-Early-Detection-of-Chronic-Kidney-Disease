@@ -49,8 +49,12 @@ def score (session, table_orig, model_name, target_table, cwh, cwh_size, size_wh
 
     cmd = "alter warehouse " + cwh + " set warehouse_size = '" + size_wh + "'"
     session.sql(cmd).collect()
-    
-    session.call('sf_score', table_orig, target_table, '@models', model_name )
+
+    # in your Streamlit `score` function, before session.call:
+# table_orig is currently "DATA.DEFAULT", so:
+    full_name  = table_orig 
+    short_name = table_orig.split('.')[-1]   # => "DEFAULT"
+    session.call('sf_score', full_name, target_table, '@models', model_name)
  
     cmd = "alter warehouse " + cwh + " set warehouse_size = '" + cwh_size + "'"
     session.sql(cmd).collect()
@@ -68,6 +72,27 @@ def to_pct(value):
     
     return val2 + " %"
 
+
+def as_scalar(val):
+    """
+    Take either a length-1 pandas Series or a raw Python value,
+    and return either an int/float/str or None.
+    """
+    # If it’s a pandas Series, grab its first element
+    if hasattr(val, "iat"):
+        scalar = val.iat[0]
+    else:
+        scalar = val
+
+    # If it’s NaN (float) or pd.NA, normalize to None
+    if scalar is pd.NA or (isinstance(scalar, float) and pd.isna(scalar)):
+        return None
+
+    # Otherwise, if it’s a NumPy scalar, convert to a native Python type
+    try:
+        return scalar.item()
+    except:
+        return scalar
 #########################################
 ##### MAIN STREAMLIT APP STARTS HERE ####
 #########################################
@@ -142,6 +167,7 @@ elif option == "Analyze":
         if (table_to_print):      
             table_to_print = "DATA." + table_to_print
 
+
             df_table = session.table(table_to_print)
 
             pd_table = df_table.limit(3).to_pandas()
@@ -150,11 +176,11 @@ elif option == "Analyze":
             col1, col2 = st.columns(2)
             with st.container():
                 with col1:
-                    positive = df_table.filter(col('target') == 1).count()
+                    positive = df_table.filter(col('"CLASSIFICATION"') == 1).count()
                     st.metric(label="Positive", value=positive)
 
                 with col2:                
-                    negative = df_table.filter(col('target') == 0).count()
+                    negative = df_table.filter(col('"CLASSIFICATION"') == 0).count()
                     st.metric(label="Negative", value=negative)
             
             with st.container():
@@ -253,16 +279,21 @@ elif option == "Model Catalog":
         col1, col2 = st.columns(2)
         with st.container():
             with col1:
-                st.metric(label="True Positive", value=pd_model["TP"])
+                tp_val = as_scalar(pd_model["TP"])
+                st.metric(label="True Positive", value=tp_val)
             with col2:
-                st.metric(label="False Positive", value=pd_model["FP"])
+                fp_val = as_scalar(pd_model["FP"])
+                st.metric(label="False Positive", value=fp_val)
 
         with st.container():
             with col1:
-                 st.metric(label="False Negative", value=pd_model["FN"])            
+                fn_val = as_scalar(pd_model["FN"])
+                st.metric(label="False Negative", value=fn_val)
             with col2:
-                 st.metric(label="True Negative", value=pd_model["TN"])
-               
+                tn_val = as_scalar(pd_model["TN"])
+                st.metric(label="True Negative", value=tn_val)
+
+
             
         st.markdown('----')
 
@@ -356,28 +387,42 @@ elif option == "Inference Runs":
             col1, col2 = st.columns(2)
             with st.container():
                 with col1:
-                    st.metric(label="True Positive", value=pd_detail_inference["TP"])
+                    # st.metric(label="True Positive", value=pd_detail_inference["TP"])
+                    fp_series = pd_detail_inference["TP"]
+                    fp_val    = int(fp_series.iat[0]) if not fp_series.isna().iat[0] else None
+                    st.metric("True Positive", fp_val)
                 with col2:
-                    st.metric(label="False Positive", value=pd_detail_inference["FP"])
+                    # st.metric(label="False Positive", value=pd_detail_inference["FP"])
+                    fp_series = pd_detail_inference["FP"]
+                    fp_val    = int(fp_series.iat[0]) if not fp_series.isna().iat[0] else None
+                    st.metric("False Positive", fp_val)
 
             with st.container():
                 with col1:
-                     st.metric(label="False Negative", value=pd_detail_inference["FN"])            
+                    # st.metric(label="False Negative", value=pd_detail_inference["FN"])    
+                    fp_series = pd_detail_inference["FN"]
+                    fp_val    = int(fp_series.iat[0]) if not fp_series.isna().iat[0] else None
+                    st.metric("False Negative", fp_val)        
                 with col2:
-                     st.metric(label="True Negative", value=pd_detail_inference["TN"])
+                    # st.metric(label="True Negative", value=pd_detail_inference["TN"])
+                    fp_series = pd_detail_inference["TN"]
+                    fp_val    = int(fp_series.iat[0]) if not fp_series.isna().iat[0] else None
+                    st.metric("True Negative", fp_val)
 
             st.markdown('----')
 
             col1, col2, col3, col4 = st.columns(4)
             with st.container():
                 with col1:
-                    st.metric(label="ACCURACY", value = to_pct(pd_detail_inference["ACCURACY"]) )
+                    # st.metric(label="ACCURACY", value = to_pct(pd_detail_inference["ACCURACY"]) )
+                    st.metric(label="ACCURACY", value=to_pct(pd_detail_inference["ACCURACY"].iat[0]))
+
                 with col2:
-                    st.metric(label="PRECISION", value = to_pct(pd_detail_inference["PRECISION"]) )
+                    st.metric(label="PRECISION", value = to_pct(pd_detail_inference["PRECISION"].iat[0]) )
                 with col3:
-                    st.metric(label="RECALL", value = to_pct(pd_detail_inference["RECALL"]) )
+                    st.metric(label="RECALL", value = to_pct(pd_detail_inference["RECALL"].iat[0]) )
                 with col4:
-                    st.metric(label="F1_SCORE", value = to_pct(pd_detail_inference["F1_SCORE"]) )
+                    st.metric(label="F1_SCORE", value = to_pct(pd_detail_inference["F1_SCORE"].iat[0]) )
 
 
 
