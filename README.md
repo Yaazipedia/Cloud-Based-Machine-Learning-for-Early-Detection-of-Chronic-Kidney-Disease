@@ -38,13 +38,13 @@ This repository demonstrates how to build, train, and deploy a chronic kidney di
    git clone https://github.com/your-username/kidney-diagnosis-snowflake.git
    cd kidney-diagnosis-snowflake
 
-2. **Create & activate your environment** 
-conda env create -f conda_env.yml
-conda activate pysnowpark-ml-streamlit
+2. **Create & activate your environment**
+   ```bash
+    conda env create -f conda_env.yml
+    conda activate pysnowpark-ml-streamlit
 
 
-3. **Configure Snowflake credentials**
-
+4. **Configure Snowflake credentials**
    ```bash
      {
     "account": "<your_account>",
@@ -57,14 +57,17 @@ conda activate pysnowpark-ml-streamlit
       }
 
 5. **Preprocess the data**
-python Final_ADT_code.ipynb \
-  --input data/kidney_disease.csv
+   ```bash
+     python Final_ADT_code.ipynb \
+        --input data/kidney_disease.csv
 
 6. **Load data into Snowflake and Train and Register Models**
-colab Final_ADT_code.ipynb
+   ```bash
+      colab Final_ADT_code.ipynb
 
-7. **Launch the Streamlit app**
-streamlit run streamlit_app/app_kidney.py
+7. **Launch the Streamlit application**
+   ```bash
+      streamlit run streamlit_app/app_kidney.py
 
 ## 📊 Streamlit UI Overview
 
