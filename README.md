@@ -88,6 +88,12 @@ streamlit run streamlit_app/app_kidney.py
   Or apply a selected model to any existing Snowflake table
   See real-time predictions and optionally compare across models
 
+## 🚀 Future Improvements
+
+- Add UDF support to run models directly inside Snowflake
+- Use SHAP or LIME for interpretability
+- Deploy the app on Streamlit Cloud or Hugging Face Spaces
+
 ## 📜 License
 This project is licensed under the MIT License. See LICENSE for details.
 
